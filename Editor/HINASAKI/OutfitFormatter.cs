@@ -1330,10 +1330,8 @@ namespace HINASAKI.Tools
 
             // SA_COS_A共存: value=3（SA制服=0,NAKED=1,COS_B=2 の後に配置）
             // COS_Bポジション: value=1（value=0=DEFAULT/OFF、value=1=ON）
-            // SA_COS_B のみ（SA_COS_A なし）CostumeBody: value=3（v0=SA服,v1=COS_B,v2=NAKED の後）
             // SA_COS_A置き換え: value=0（改変者衣装がデフォルト衣装。COS_B/NAKED時に非表示）
-            int startValue = needsCosB ? 3 : isCosB ? 1
-                : (isReplacement && slot.parameterName == "CostumeBody") ? 3 : 0;
+            int startValue = needsCosB ? 3 : isCosB ? 1 : 0;
             var pat = new PatternConfig { label = "ON", value = startValue };
 
             bool autoSelectAll = !needsCosB && slot.parameterName == "CostumeBody";
@@ -2753,6 +2751,11 @@ namespace HINASAKI.Tools
                         t.AddCondition(AnimatorConditionMode.Less, 1, param);
                     }
                     zeroPatternState = state;
+                }
+                else if (pat.isCastoff)
+                {
+                    // isCastoff（NAKED）: value以上で全てOFF（他の衣装選択時も含む）
+                    t.AddCondition(AnimatorConditionMode.Greater, pat.value - 1, param);
                 }
                 else
                 {
