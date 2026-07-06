@@ -1341,7 +1341,7 @@ namespace HINASAKI.Tools
             int startValue = needsCosB ? 3 : isCosB ? 1 : 0;
             var pat = new PatternConfig { label = "ON", value = startValue };
 
-            bool autoSelectAll = !needsCosB && slot.parameterName == "CostumeBody";
+            bool autoSelectAll = slot.parameterName == "CostumeBody";
             if (autoSelectAll)
             {
                 // CostumeBody置き換えモード: 他スロット（Head等）が選択済みのものを除いた全レンダラー・全PhysBoneを自動使用
