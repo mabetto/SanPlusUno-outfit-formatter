@@ -1307,6 +1307,13 @@ namespace HINASAKI.Tools
             bool isReplacement = !needsCosB && _cosBPresent
                 && slot.blendMode == BlendMode.Exclusive && slot.paramType == ParameterType.Int;
 
+            // 置き換えモード+CostumeBody: CostumeBody=1でOFF、CostumeBody=2でNAKEDになるようflag強制
+            if (isReplacement && slot.parameterName == "CostumeBody")
+            {
+                cat.hideOnCastoff = true;
+                cat.hideOnNaked   = true;
+            }
+
             if (slot.blendMode == BlendMode.Exclusive && slot.paramType == ParameterType.Int)
             {
                 if (needsCosB)
@@ -2751,11 +2758,6 @@ namespace HINASAKI.Tools
                         t.AddCondition(AnimatorConditionMode.Less, 1, param);
                     }
                     zeroPatternState = state;
-                }
-                else if (pat.isCastoff)
-                {
-                    // isCastoff（NAKED）: SA服以外（value>=1）で全てOFF
-                    t.AddCondition(AnimatorConditionMode.Greater, 0, param);
                 }
                 else
                 {
