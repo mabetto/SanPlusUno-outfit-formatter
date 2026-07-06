@@ -2762,6 +2762,9 @@ namespace HINASAKI.Tools
                 else
                 {
                     t.AddCondition(AnimatorConditionMode.Equals, pat.value, param);
+                    // SA_COS_A共存でHead/Skirt等: BODYも同じvalue=3のときのみON
+                    if (cat.hasCosB && param != "CostumeBody")
+                        t.AddCondition(AnimatorConditionMode.Equals, pat.value, "CostumeBody");
                 }
             }
 
@@ -2805,6 +2808,16 @@ namespace HINASAKI.Tools
                 toDefault.canTransitionToSelf = false;
                 foreach (var p in nonNakedPatterns)
                     toDefault.AddCondition(AnimatorConditionMode.NotEqual, p.value, param);
+
+                // SA_COS_A共存でHead/Skirt等: BODYがOFF(!=maxValue)のときもDEFAULTへ
+                if (cat.hasCosB && param != "CostumeBody")
+                {
+                    var toDefaultBody = sm.AddAnyStateTransition(defaultState);
+                    toDefaultBody.hasExitTime = false;
+                    toDefaultBody.duration = 0f;
+                    toDefaultBody.canTransitionToSelf = false;
+                    toDefaultBody.AddCondition(AnimatorConditionMode.NotEqual, maxValue, "CostumeBody");
+                }
             }
         }
 
