@@ -22,7 +22,7 @@ namespace HINASAKI.Tools
         {
             get
             {
-                var guids = AssetDatabase.FindAssets("t:Script SanpurasuOutfitFormatter");
+                var guids = AssetDatabase.FindAssets("t:Script OutfitFormatter");
                 if (guids.Length > 0)
                     return System.IO.Path.GetDirectoryName(
                         AssetDatabase.GUIDToAssetPath(guids[0])).Replace("\\", "/") + "/Images";
