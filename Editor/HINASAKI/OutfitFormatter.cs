@@ -3033,20 +3033,20 @@ namespace HINASAKI.Tools
                 // SA_COS_A共存: CostumeBody==pat.value かつ param=false のときのみON
                 AddParameterIfMissing(controller, "CostumeBody", AnimatorControllerParameterType.Int);
 
-                // OFF: param=true
+                // OFF: param=false（非選択）
                 var tOff = sm.AddAnyStateTransition(offState);
                 tOff.hasExitTime = false; tOff.duration = 0f; tOff.canTransitionToSelf = false;
-                tOff.AddCondition(AnimatorConditionMode.If, 0, param);
+                tOff.AddCondition(AnimatorConditionMode.IfNot, 0, param);
 
                 // OFF: CostumeBody != cosBodyLinkValue
                 var tOffBody = sm.AddAnyStateTransition(offState);
                 tOffBody.hasExitTime = false; tOffBody.duration = 0f; tOffBody.canTransitionToSelf = false;
                 tOffBody.AddCondition(AnimatorConditionMode.NotEqual, cat.cosBodyLinkValue, "CostumeBody");
 
-                // ON: param=false AND CostumeBody==cosBodyLinkValue
+                // ON: param=true AND CostumeBody==cosBodyLinkValue（選択=ON）
                 var tOn = sm.AddAnyStateTransition(onState);
                 tOn.hasExitTime = false; tOn.duration = 0f; tOn.canTransitionToSelf = false;
-                tOn.AddCondition(AnimatorConditionMode.IfNot, 0, param);
+                tOn.AddCondition(AnimatorConditionMode.If, 0, param);
                 tOn.AddCondition(AnimatorConditionMode.Equals, cat.cosBodyLinkValue, "CostumeBody");
             }
             else
