@@ -3000,6 +3000,27 @@ namespace HINASAKI.Tools
                     tOn2.AddCondition(AnimatorConditionMode.Greater, 1, "CostumeBody");
                 }
             }
+            else if (cat.hasCosB)
+            {
+                // SA_COS_A共存: CostumeBody==pat.value かつ param=false のときのみON
+                AddParameterIfMissing(controller, "CostumeBody", AnimatorControllerParameterType.Int);
+
+                // OFF: param=true
+                var tOff = sm.AddAnyStateTransition(offState);
+                tOff.hasExitTime = false; tOff.duration = 0f; tOff.canTransitionToSelf = false;
+                tOff.AddCondition(AnimatorConditionMode.If, 0, param);
+
+                // OFF: CostumeBody != pat.value
+                var tOffBody = sm.AddAnyStateTransition(offState);
+                tOffBody.hasExitTime = false; tOffBody.duration = 0f; tOffBody.canTransitionToSelf = false;
+                tOffBody.AddCondition(AnimatorConditionMode.NotEqual, pat.value, "CostumeBody");
+
+                // ON: param=false AND CostumeBody==pat.value
+                var tOn = sm.AddAnyStateTransition(onState);
+                tOn.hasExitTime = false; tOn.duration = 0f; tOn.canTransitionToSelf = false;
+                tOn.AddCondition(AnimatorConditionMode.IfNot, 0, param);
+                tOn.AddCondition(AnimatorConditionMode.Equals, pat.value, "CostumeBody");
+            }
             else
             {
                 var toOff = onState.AddTransition(offState);
