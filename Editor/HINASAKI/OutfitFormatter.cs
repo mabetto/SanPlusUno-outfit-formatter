@@ -2551,6 +2551,15 @@ namespace HINASAKI.Tools
 
                 BuildBrightnessLayers(controller, outfitName);
 
+                // SA_COS_A共存モード: 既存アニメーターにCostumeBody新値のOFF遷移を追加
+                if (_simpleOutfitMode == OutfitMode.CosA && _cosAPresent)
+                {
+                    var bodyCat = _categories.FirstOrDefault(c => c.parameterName == "CostumeBody");
+                    var onPat = bodyCat?.patterns.FirstOrDefault(p => p.label == "ON");
+                    if (onPat != null)
+                        PatchExistingCosBodyLayers(onPat.value);
+                }
+
                 _lastGeneratedController = controller;
                 EditorUtility.SetDirty(controller);
 
@@ -2819,6 +2828,76 @@ namespace HINASAKI.Tools
                     toDefaultBody.AddCondition(AnimatorConditionMode.NotEqual, maxValue, "CostumeBody");
                 }
             }
+        }
+
+        // SA_COS_A など既存アニメーターの CostumeBody レイヤーに新しい値の OFF 遷移を追加
+        void PatchExistingCosBodyLayers(int newCosBodyValue)
+        {
+            var avatarRoot = GetAvatarRoot();
+            if (avatarRoot == null) return;
+
+            var mergeAnimType = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => { try { return a.GetTypes(); } catch { return Type.EmptyTypes; } })
+                .FirstOrDefault(t => (t.FullName ?? "").Contains("ModularAvatarMergeAnimator")
+                    && typeof(Component).IsAssignableFrom(t));
+            if (mergeAnimType == null) return;
+
+            foreach (Component comp in avatarRoot.GetComponentsInChildren(mergeAnimType, true))
+            {
+                // 今回生成した prefab 配下はスキップ
+                if (_prefab != null && comp.transform.IsChildOf(_prefab.transform)) continue;
+
+                var so = new SerializedObject(comp);
+                var controller = so.FindProperty("animator")?.objectReferenceValue as AnimatorController;
+                if (controller == null) continue;
+
+                bool patched = false;
+                foreach (var layer in controller.layers)
+                    patched |= PatchStateMachineForCosBody(layer.stateMachine, newCosBodyValue);
+
+                if (patched)
+                    EditorUtility.SetDirty(controller);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        bool PatchStateMachineForCosBody(AnimatorStateMachine sm, int newValue)
+        {
+            // CostumeBody を使う AnyState 遷移がないレイヤーはスキップ
+            if (!sm.anyStateTransitions.Any(t => t.conditions.Any(c => c.parameter == "CostumeBody")))
+                return false;
+
+            // 既に newValue を処理していればスキップ
+            if (sm.anyStateTransitions.Any(t => t.conditions.Any(c =>
+                    c.parameter == "CostumeBody"
+                    && c.mode == AnimatorConditionMode.Equals
+                    && Mathf.Approximately(c.threshold, newValue))))
+                return false;
+
+            // 遷移先ステートの候補: CostumeBody != 0 の既存遷移先 → NAKED/OFF 系の名前 → 最初のステート
+            AnimatorState target = null;
+            foreach (var t in sm.anyStateTransitions)
+            {
+                var cond = t.conditions.FirstOrDefault(c => c.parameter == "CostumeBody");
+                if (cond.parameter == null) continue;
+                bool isOffValue = cond.mode == AnimatorConditionMode.Greater && Mathf.Approximately(cond.threshold, 0)
+                    || cond.mode == AnimatorConditionMode.Equals && !Mathf.Approximately(cond.threshold, 0);
+                if (isOffValue && t.destinationState != null) { target = t.destinationState; break; }
+            }
+            if (target == null)
+            {
+                target = sm.states
+                    .Select(s => s.state)
+                    .FirstOrDefault(s => { var n = s.name.ToLower(); return n.Contains("naked") || n.Contains("default") || n.Contains("off"); });
+            }
+            if (target == null) return false;
+
+            var newT = sm.AddAnyStateTransition(target);
+            newT.hasExitTime = false;
+            newT.duration = 0f;
+            newT.canTransitionToSelf = false;
+            newT.AddCondition(AnimatorConditionMode.Equals, newValue, "CostumeBody");
+            return true;
         }
 
         void BuildCombineLayer(AnimatorController controller, CategoryConfig cat)
