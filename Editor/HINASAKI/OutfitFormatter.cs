@@ -2752,6 +2752,11 @@ namespace HINASAKI.Tools
                     }
                     zeroPatternState = state;
                 }
+                else if (pat.isCastoff)
+                {
+                    // isCastoff: value以上すべてで発動（value=3+の改変者衣装も含む）
+                    t.AddCondition(AnimatorConditionMode.Greater, pat.value - 1, param);
+                }
                 else
                 {
                     t.AddCondition(AnimatorConditionMode.Equals, pat.value, param);
