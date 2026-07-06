@@ -18,9 +18,19 @@ namespace HINASAKI.Tools
         const float LilMonochromeLighting = 0.5f;
         const int IconSize = 128;
         const int PreviewLayer = 31;
-        const string ResourceFolder = "Assets/HINASAKI/Editor/Assets/Images";
-        const string DeleteIconPath = ResourceFolder + "/DELETE.png";
-        static readonly string[] FrameIconPaths =
+        static string ResourceFolder
+        {
+            get
+            {
+                var guids = AssetDatabase.FindAssets("t:Script SanpurasuOutfitFormatter");
+                if (guids.Length > 0)
+                    return System.IO.Path.GetDirectoryName(
+                        AssetDatabase.GUIDToAssetPath(guids[0])).Replace("\\", "/") + "/Images";
+                return "Assets/HINASAKI/Editor/Assets/Images";
+            }
+        }
+        static string DeleteIconPath => ResourceFolder + "/DELETE.png";
+        static string[] FrameIconPaths => new[]
         {
             ResourceFolder + "/FRAME1.png",
             ResourceFolder + "/FRAME2.png",
@@ -2241,7 +2251,7 @@ namespace HINASAKI.Tools
                 tex.Apply();
 
                 // マスク適用（レイヤー合成前に適用してフレームはマスク外に出す）
-                const string maskPath = "Assets/HINASAKI/Editor/Assets/Images/ICON_MASK.png";
+                var maskPath = ResourceFolder + "/ICON_MASK.png";
                 var maskAsset = AssetDatabase.LoadAssetAtPath<Texture2D>(maskPath);
                 if (maskAsset == null)
                     Debug.LogWarning("[OutfitFormatter] マスク画像が見つかりません: " + maskPath);
