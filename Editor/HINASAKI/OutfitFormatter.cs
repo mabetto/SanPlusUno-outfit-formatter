@@ -1307,8 +1307,8 @@ namespace HINASAKI.Tools
             bool isReplacement = !needsCosB && _cosBPresent
                 && slot.blendMode == BlendMode.Exclusive && slot.paramType == ParameterType.Int;
 
-            // CostumeBodyスロット（置き換え・共存どちらも）: 明示的なOFF遷移を生成するためflag強制
-            if (slot.parameterName == "CostumeBody" && (isReplacement || needsCosB))
+            // 置き換えモード+CostumeBody: CostumeBody=1でOFF、CostumeBody=2でNAKEDになるようflag強制
+            if (isReplacement && slot.parameterName == "CostumeBody")
             {
                 cat.hideOnCastoff = true;
                 cat.hideOnNaked   = true;
