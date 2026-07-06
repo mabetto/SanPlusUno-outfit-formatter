@@ -1341,10 +1341,13 @@ namespace HINASAKI.Tools
                 }
             }
 
-            // SA_COS_A共存: value=3（SA制服=0,NAKED=1,COS_B=2 の後に配置）
+            // SA_COS_A共存+CostumeBody: value=3（SA制服=0,NAKED=1,COS_B=2 の後に配置）
+            // SA_COS_A共存+Head等: value=0（デフォルトON、選択でOFF）
             // COS_Bポジション: value=1（value=0=DEFAULT/OFF、value=1=ON）
             // SA_COS_A置き換え: value=0（改変者衣装がデフォルト衣装。COS_B/NAKED時に非表示）
-            int startValue = needsCosB ? 3 : isCosB ? 1 : 0;
+            int startValue = needsCosB
+                ? (slot.parameterName == "CostumeBody" ? 3 : 0)
+                : isCosB ? 1 : 0;
             var pat = new PatternConfig { label = "ON", value = startValue };
 
             bool autoSelectAll = slot.parameterName == "CostumeBody";
@@ -3033,20 +3036,20 @@ namespace HINASAKI.Tools
                 // SA_COS_A共存: CostumeBody==pat.value かつ param=false のときのみON
                 AddParameterIfMissing(controller, "CostumeBody", AnimatorControllerParameterType.Int);
 
-                // OFF: param=false（非選択）
+                // OFF: param=true（選択でOFF）
                 var tOff = sm.AddAnyStateTransition(offState);
                 tOff.hasExitTime = false; tOff.duration = 0f; tOff.canTransitionToSelf = false;
-                tOff.AddCondition(AnimatorConditionMode.IfNot, 0, param);
+                tOff.AddCondition(AnimatorConditionMode.If, 0, param);
 
                 // OFF: CostumeBody != cosBodyLinkValue
                 var tOffBody = sm.AddAnyStateTransition(offState);
                 tOffBody.hasExitTime = false; tOffBody.duration = 0f; tOffBody.canTransitionToSelf = false;
                 tOffBody.AddCondition(AnimatorConditionMode.NotEqual, cat.cosBodyLinkValue, "CostumeBody");
 
-                // ON: param=true AND CostumeBody==cosBodyLinkValue（選択=ON）
+                // ON: param=false AND CostumeBody==cosBodyLinkValue（非選択=ON）
                 var tOn = sm.AddAnyStateTransition(onState);
                 tOn.hasExitTime = false; tOn.duration = 0f; tOn.canTransitionToSelf = false;
-                tOn.AddCondition(AnimatorConditionMode.If, 0, param);
+                tOn.AddCondition(AnimatorConditionMode.IfNot, 0, param);
                 tOn.AddCondition(AnimatorConditionMode.Equals, cat.cosBodyLinkValue, "CostumeBody");
             }
             else
