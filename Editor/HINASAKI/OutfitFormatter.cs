@@ -1146,13 +1146,9 @@ namespace HINASAKI.Tools
 
 
 
-            // SA_COS_A共存モード: prefab内Rendererをデフォルト無効化（FXレイヤーが有効化するまで非表示）
+            // SA_COS_A共存モード: GameObjectをデフォルト無効化（FXレイヤーが有効化するまで非表示）
             if (_simpleOutfitMode == OutfitMode.CosA && _cosAPresent)
-            {
-                foreach (var r in _prefab.GetComponentsInChildren<Renderer>(true))
-                    r.enabled = false;
-                EditorUtility.SetDirty(_prefab);
-            }
+                DisableAllRenderers();
 
             AssetDatabase.SaveAssets();
             // シーンに追加した MA コンポーネントを永続化するためシーンも保存
