@@ -683,7 +683,7 @@ namespace HINASAKI.Tools
                 {
                     foreach (var slot in _simpleCosASlots)
                     {
-                        bool autoBody = !_cosAPresent && slot.parameterName == "CostumeBody";
+                        bool autoBody = slot.parameterName == "CostumeBody";
                         bool hasNoMesh = slot.enabled && !autoBody && slot.rendererIndices.Count == 0;
 
                         EditorGUILayout.BeginVertical("box");
@@ -884,7 +884,7 @@ namespace HINASAKI.Tools
                 foreach (var slot in _simpleCosASlots)
                 {
                     if (!slot.enabled) continue;
-                    bool autoBody = !_cosAPresent && slot.parameterName == "CostumeBody";
+                    bool autoBody = slot.parameterName == "CostumeBody";
                     if (autoBody || slot.rendererIndices.Count > 0) { hasAny = true; break; }
                 }
                 if (!hasAny)
@@ -1166,7 +1166,7 @@ namespace HINASAKI.Tools
                 foreach (var slot in _simpleCosASlots)
                 {
                     if (!slot.enabled) continue;
-                    bool autoBody = !_cosAPresent && slot.parameterName == "CostumeBody";
+                    bool autoBody = slot.parameterName == "CostumeBody";
                     if (!autoBody && slot.rendererIndices.Count == 0) continue;
                     _categories.Add(BuildSimpleCategory(slot));
                 }
@@ -1265,7 +1265,7 @@ namespace HINASAKI.Tools
                 {
                     var slot = slots[si];
                     if (!slot.enabled) continue;
-                    bool autoBody = _simpleOutfitMode == OutfitMode.CosA && !_cosAPresent
+                    bool autoBody = _simpleOutfitMode == OutfitMode.CosA
                                     && slot.parameterName == "CostumeBody";
                     if (!autoBody && slot.rendererIndices.Count == 0) continue;
                     string key = IconKey(si, 0);
@@ -1941,7 +1941,7 @@ namespace HINASAKI.Tools
                     var slot = slots[si];
                     if (!slot.enabled) continue;
                     // Body（自動）はメッシュ選択不要なので表示する。Skirt等はメッシュが1つも選ばれていなければスキップ
-                    bool autoBody = _simpleOutfitMode == OutfitMode.CosA && !_cosAPresent
+                    bool autoBody = _simpleOutfitMode == OutfitMode.CosA
                                     && slot.parameterName == "CostumeBody";
                     if (!autoBody && slot.rendererIndices.Count == 0) continue;
 
