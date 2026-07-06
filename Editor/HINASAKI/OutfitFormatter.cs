@@ -111,6 +111,7 @@ namespace HINASAKI.Tools
             public ParameterType parameterType = ParameterType.Bool;
             public BlendMode blendMode = BlendMode.Combine;
             public bool hasCosB = false; // value=1のCOS_Bスロットを挿入するか
+            public int cosBodyLinkValue = -1; // SA_COS_A共存: CostumeBodyがこの値のときON(-1=無効)
             public bool hideOnCastoff = false; // COS_B(CostumeBody=1)時に非表示、キャストオフ(=2)時は表示
             public bool hideOnNaked    = false; // キャストオフ(CostumeBody=2)時に非表示
             public List<PatternConfig> patterns = new List<PatternConfig>();
@@ -1304,6 +1305,7 @@ namespace HINASAKI.Tools
                 parameterType = slot.paramType,
                 blendMode = slot.blendMode,
                 hasCosB = needsCosB,
+                cosBodyLinkValue = needsCosB ? 3 : -1,
                 hideOnCastoff = slot.hideOnCastoff && !needsCosB,
                 hideOnNaked   = slot.hideOnNaked   && !needsCosB
             };
@@ -2769,6 +2771,9 @@ namespace HINASAKI.Tools
                     else
                     {
                         t.AddCondition(AnimatorConditionMode.Less, 1, param);
+                        // SA_COS_A共存でHead等: CostumeBody=3のときのみON
+                        if (cat.hasCosB && param != "CostumeBody" && cat.cosBodyLinkValue > 0)
+                            t.AddCondition(AnimatorConditionMode.Equals, cat.cosBodyLinkValue, "CostumeBody");
                     }
                     zeroPatternState = state;
                 }
@@ -2779,6 +2784,26 @@ namespace HINASAKI.Tools
                     if (cat.hasCosB && param != "CostumeBody")
                         t.AddCondition(AnimatorConditionMode.Equals, pat.value, "CostumeBody");
                 }
+            }
+
+            // SA_COS_A共存でHead等（value=0=ON）: CostumeBody条件でOFFするステート
+            AnimatorState headBodyOffState = null;
+            if (cat.hasCosB && param != "CostumeBody" && hasZeroPattern && cat.cosBodyLinkValue > 0)
+            {
+                float bodyOffY = GY0 - GYS * 2;
+                headBodyOffState = sm.AddState("BODY_OFF", new Vector3(GX, bodyOffY, 0));
+                headBodyOffState.motion = GetOrCreateOffClip();
+                headBodyOffState.writeDefaultValues = false;
+
+                // CostumeBody != cosBodyLinkValue（衣装非着用）のときOFF
+                var tBodyOff = sm.AddAnyStateTransition(headBodyOffState);
+                tBodyOff.hasExitTime = false; tBodyOff.duration = 0f; tBodyOff.canTransitionToSelf = false;
+                tBodyOff.AddCondition(AnimatorConditionMode.NotEqual, cat.cosBodyLinkValue, "CostumeBody");
+
+                // メニューでトグルON（param != 0）のときもOFF
+                var tMenuOff = sm.AddAnyStateTransition(headBodyOffState);
+                tMenuOff.hasExitTime = false; tMenuOff.duration = 0f; tMenuOff.canTransitionToSelf = false;
+                tMenuOff.AddCondition(AnimatorConditionMode.Greater, 0, param);
             }
 
             // COS_B_HIDE: CostumeBody=1（COS_B/温泉タオル）時に非表示
@@ -2811,6 +2836,9 @@ namespace HINASAKI.Tools
 
             if (zeroPatternState != null)
                 sm.defaultState = zeroPatternState;
+            // SA_COS_A共存でHead等: デフォルトはOFF（CostumeBody=3かつparam=0のときのみON）
+            if (headBodyOffState != null)
+                sm.defaultState = headBodyOffState;
 
             // 共存モードのみ: AnyState → DEFAULT（いずれのパターン値でもない場合）
             if (defaultState != null)
@@ -3010,16 +3038,16 @@ namespace HINASAKI.Tools
                 tOff.hasExitTime = false; tOff.duration = 0f; tOff.canTransitionToSelf = false;
                 tOff.AddCondition(AnimatorConditionMode.If, 0, param);
 
-                // OFF: CostumeBody != pat.value
+                // OFF: CostumeBody != cosBodyLinkValue
                 var tOffBody = sm.AddAnyStateTransition(offState);
                 tOffBody.hasExitTime = false; tOffBody.duration = 0f; tOffBody.canTransitionToSelf = false;
-                tOffBody.AddCondition(AnimatorConditionMode.NotEqual, pat.value, "CostumeBody");
+                tOffBody.AddCondition(AnimatorConditionMode.NotEqual, cat.cosBodyLinkValue, "CostumeBody");
 
-                // ON: param=false AND CostumeBody==pat.value
+                // ON: param=false AND CostumeBody==cosBodyLinkValue
                 var tOn = sm.AddAnyStateTransition(onState);
                 tOn.hasExitTime = false; tOn.duration = 0f; tOn.canTransitionToSelf = false;
                 tOn.AddCondition(AnimatorConditionMode.IfNot, 0, param);
-                tOn.AddCondition(AnimatorConditionMode.Equals, pat.value, "CostumeBody");
+                tOn.AddCondition(AnimatorConditionMode.Equals, cat.cosBodyLinkValue, "CostumeBody");
             }
             else
             {
