@@ -18,15 +18,19 @@ namespace HINASAKI.Tools
         const float LilMonochromeLighting = 0.5f;
         const int IconSize = 128;
         const int PreviewLayer = 31;
+        static string _resourceFolder;
         static string ResourceFolder
         {
             get
             {
+                if (_resourceFolder != null) return _resourceFolder;
                 var guids = AssetDatabase.FindAssets("t:Script OutfitFormatter");
                 if (guids.Length > 0)
-                    return System.IO.Path.GetDirectoryName(
+                    _resourceFolder = System.IO.Path.GetDirectoryName(
                         AssetDatabase.GUIDToAssetPath(guids[0])).Replace("\\", "/") + "/Images";
-                return "Assets/HINASAKI/Editor/Assets/Images";
+                else
+                    _resourceFolder = "Assets/HINASAKI/Editor/Assets/Images";
+                return _resourceFolder;
             }
         }
         static string DeleteIconPath => ResourceFolder + "/DELETE.png";
