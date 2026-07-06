@@ -24,7 +24,8 @@ namespace HINASAKI.Tools
             get
             {
                 if (_resourceFolder != null) return _resourceFolder;
-                var guids = AssetDatabase.FindAssets("t:Script OutfitFormatter");
+                var guids = AssetDatabase.FindAssets("t:Script OutfitFormatter",
+                    new[] { "Packages/com.hinasaki.outfit-formatter", "Assets" });
                 if (guids.Length > 0)
                     _resourceFolder = System.IO.Path.GetDirectoryName(
                         AssetDatabase.GUIDToAssetPath(guids[0])).Replace("\\", "/") + "/Images";
@@ -208,7 +209,8 @@ namespace HINASAKI.Tools
         [SerializeField] List<int> _simpleIndependentPhysBoneIndices = new List<int>();
 
         [SerializeField] GameObject _prefab;
-        [SerializeField] string _outputFolder = "Assets/HINASAKI/Generated";
+        [SerializeField] string _outputFolder = "Assets/Generated";
+        [SerializeField] VRCExpressionsMenu _cosAOutfitMenu;
         bool _hasExistingMenu;
         [SerializeField] ExistingMenuHandling _existingMenuHandling = ExistingMenuHandling.KeepAsIs;
 
@@ -323,6 +325,7 @@ namespace HINASAKI.Tools
             var s = BuildToolSettings();
             string absPath = System.IO.Path.GetFullPath(
                 System.IO.Path.Combine(Application.dataPath, "..", settingsPath));
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(absPath));
             System.IO.File.WriteAllText(absPath, JsonUtility.ToJson(s, true), System.Text.Encoding.UTF8);
             AssetDatabase.ImportAsset(settingsPath);
             Debug.Log($"[OutfitFormatter] 設定を自動保存しました: {settingsPath}");
@@ -651,7 +654,11 @@ namespace HINASAKI.Tools
             switch (_simpleOutfitMode)
             {
                 case OutfitMode.CosA:
-                    EditorGUILayout.HelpBox("3+1のOutfitMenuにメニューを追加し、COS_Aパラメーターで制御します。", MessageType.Info); break;
+                    EditorGUILayout.HelpBox("3+1のOutfitMenuにメニューを追加し、COS_Aパラメーターで制御します。", MessageType.Info);
+                    _cosAOutfitMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(
+                        new GUIContent("インストール先 OutfitMenu", "COS_Aメニューをインストールする VRCExpressionsMenu アセット"),
+                        _cosAOutfitMenu, typeof(VRCExpressionsMenu), false);
+                    break;
                 case OutfitMode.CosB:
                     EditorGUILayout.HelpBox("メニュー生成なし。アニメーターとMA Parametersのみ生成します。", MessageType.Info); break;
                 case OutfitMode.Independent:
@@ -1529,6 +1536,9 @@ namespace HINASAKI.Tools
             {
                 case OutfitMode.CosA:
                     EditorGUILayout.HelpBox("カテゴリごとにメニューコントロールを生成してOutfitMenuにインストールします。", MessageType.Info);
+                    _cosAOutfitMenu = (VRCExpressionsMenu)EditorGUILayout.ObjectField(
+                        new GUIContent("インストール先 OutfitMenu", "COS_Aメニューをインストールする VRCExpressionsMenu アセット"),
+                        _cosAOutfitMenu, typeof(VRCExpressionsMenu), false);
                     DrawCosADetectionToggle();
                     break;
                 case OutfitMode.CosB:
@@ -3061,12 +3071,16 @@ namespace HINASAKI.Tools
 
         void BuildCosAMenu()
         {
-            string targetPath = AssetDatabase.GUIDToAssetPath(TargetMenuGuid);
-            var outfitMenu = string.IsNullOrEmpty(targetPath)
-                ? null : AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(targetPath);
+            VRCExpressionsMenu outfitMenu = _cosAOutfitMenu;
             if (outfitMenu == null)
             {
-                EditorUtility.DisplayDialog("エラー", "3+1のOutfitMenuアセットが見つかりません。3+1本体をインポートしてください。", "OK");
+                string targetPath = AssetDatabase.GUIDToAssetPath(TargetMenuGuid);
+                if (!string.IsNullOrEmpty(targetPath))
+                    outfitMenu = AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(targetPath);
+            }
+            if (outfitMenu == null)
+            {
+                EditorUtility.DisplayDialog("エラー", "インストール先の OutfitMenu が設定されていません。\nモード選択欄の「インストール先 OutfitMenu」にメニューアセットをセットしてください。", "OK");
                 return;
             }
 
@@ -3193,9 +3207,13 @@ namespace HINASAKI.Tools
 
             if (_mode == OutfitMode.CosA)
             {
-                string targetPath = AssetDatabase.GUIDToAssetPath(TargetMenuGuid);
-                var outfitMenu = string.IsNullOrEmpty(targetPath)
-                    ? null : AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(targetPath);
+                VRCExpressionsMenu outfitMenu = _cosAOutfitMenu;
+                if (outfitMenu == null)
+                {
+                    string targetPath = AssetDatabase.GUIDToAssetPath(TargetMenuGuid);
+                    if (!string.IsNullOrEmpty(targetPath))
+                        outfitMenu = AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(targetPath);
+                }
                 if (outfitMenu != null)
                 {
                     so.FindProperty("installTargetMenu").objectReferenceValue = outfitMenu;
