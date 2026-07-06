@@ -1309,10 +1309,16 @@ namespace HINASAKI.Tools
 
             if (slot.blendMode == BlendMode.Exclusive && slot.paramType == ParameterType.Int)
             {
-                if (needsCosB)
+                if (needsCosB && _cosAPresent)
                 {
                     // SA_COS_A共存: COS_Bスロットは value=2
                     cat.patterns.Add(new PatternConfig { label = "COS_B", value = 2, isCosB = true });
+                }
+                else if (needsCosB && _cosBPresent && slot.parameterName == "CostumeBody")
+                {
+                    // SA_COS_Bのみ: value=1 が COS_B（SA_COS_B 管理）、value=2 がキャストオフ
+                    cat.patterns.Add(new PatternConfig { label = "COS_B", value = 1, menuOnly = true });
+                    cat.patterns.Add(new PatternConfig { label = "NAKED", value = 2, isCastoff = true });
                 }
                 else if (isReplacement && slot.parameterName == "CostumeBody")
                 {
