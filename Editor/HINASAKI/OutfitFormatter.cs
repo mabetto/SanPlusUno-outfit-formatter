@@ -1288,9 +1288,9 @@ namespace HINASAKI.Tools
 
         CategoryConfig BuildSimpleCategory(SimpleSlot slot, bool isCosB = false)
         {
-            // SA_COS_A と共存する場合のみ value=3・COS_B連携が必要
-            // SA_COS_A なし（置き換え）→ value=1、COS_B 不要
-            bool needsCosB = _simpleOutfitMode == OutfitMode.CosA && _cosAPresent;
+            // SA_COS_A または SA_COS_B が存在する場合、value=1（COS_B）・=2（NAKED）が確保済みなので
+            // COS_A ポジションの衣装は value=3 から配置する
+            bool needsCosB = _simpleOutfitMode == OutfitMode.CosA && (_cosAPresent || _cosBPresent);
 
             var cat = new CategoryConfig
             {
