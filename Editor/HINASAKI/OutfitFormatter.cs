@@ -2754,8 +2754,8 @@ namespace HINASAKI.Tools
                 }
                 else if (pat.isCastoff)
                 {
-                    // isCastoff（NAKED）: value以上で全てOFF（他の衣装選択時も含む）
-                    t.AddCondition(AnimatorConditionMode.Greater, pat.value - 1, param);
+                    // isCastoff（NAKED）: SA服以外（value>=1）で全てOFF
+                    t.AddCondition(AnimatorConditionMode.Greater, 0, param);
                 }
                 else
                 {
