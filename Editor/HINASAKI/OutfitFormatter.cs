@@ -1288,9 +1288,9 @@ namespace HINASAKI.Tools
 
         CategoryConfig BuildSimpleCategory(SimpleSlot slot, bool isCosB = false)
         {
-            // SA_COS_A または SA_COS_B が存在する場合、value=1（COS_B）・=2（NAKED）が確保済みなので
-            // COS_A ポジションの衣装は value=3 から配置する
-            bool needsCosB = _simpleOutfitMode == OutfitMode.CosA && (_cosAPresent || _cosBPresent);
+            // SA_COS_A と共存する場合のみ value=3・COS_B連携が必要
+            // SA_COS_A なし（置き換え）→ value=1、COS_B 不要
+            bool needsCosB = _simpleOutfitMode == OutfitMode.CosA && _cosAPresent;
 
             var cat = new CategoryConfig
             {
@@ -1309,16 +1309,10 @@ namespace HINASAKI.Tools
 
             if (slot.blendMode == BlendMode.Exclusive && slot.paramType == ParameterType.Int)
             {
-                if (needsCosB && _cosAPresent)
+                if (needsCosB)
                 {
                     // SA_COS_A共存: COS_Bスロットは value=2
                     cat.patterns.Add(new PatternConfig { label = "COS_B", value = 2, isCosB = true });
-                }
-                else if (needsCosB && _cosBPresent && slot.parameterName == "CostumeBody")
-                {
-                    // SA_COS_Bのみ: value=1 が COS_B（SA_COS_B 管理）、value=2 がキャストオフ
-                    cat.patterns.Add(new PatternConfig { label = "COS_B", value = 1, menuOnly = true });
-                    cat.patterns.Add(new PatternConfig { label = "NAKED", value = 2, isCastoff = true });
                 }
                 else if (isReplacement && slot.parameterName == "CostumeBody")
                 {
@@ -2757,11 +2751,6 @@ namespace HINASAKI.Tools
                         t.AddCondition(AnimatorConditionMode.Less, 1, param);
                     }
                     zeroPatternState = state;
-                }
-                else if (pat.isCastoff)
-                {
-                    // isCastoff: value以上すべてで発動（value=3+の改変者衣装も含む）
-                    t.AddCondition(AnimatorConditionMode.Greater, pat.value - 1, param);
                 }
                 else
                 {
