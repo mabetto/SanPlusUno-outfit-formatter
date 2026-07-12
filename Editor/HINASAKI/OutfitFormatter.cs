@@ -16,7 +16,7 @@ namespace HINASAKI.Tools
         const string TargetMenuGuid = "568b7e74ff524f24bba18c877dcd04b1";
         const float LilLightMinLimit = 0.05f;
         const float LilMonochromeLighting = 0.5f;
-        const int IconSize = 128;
+        const int IconSize = 256;
         const int PreviewLayer = 31;
         static string _resourceFolder;
         static string ResourceFolder
@@ -2389,8 +2389,10 @@ namespace HINASAKI.Tools
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer != null)
                 {
-                    importer.textureType = TextureImporterType.Default;
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
                     importer.alphaIsTransparency = true;
+                    importer.maxTextureSize = 256;
                     importer.SaveAndReimport();
                 }
                 var loaded = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
@@ -2432,8 +2434,10 @@ namespace HINASAKI.Tools
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer != null)
                 {
-                    importer.textureType = TextureImporterType.Default;
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
                     importer.alphaIsTransparency = true;
+                    importer.maxTextureSize = 256;
                     importer.SaveAndReimport();
                 }
                 _generatedIcons[key] = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
